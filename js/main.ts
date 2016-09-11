@@ -21,7 +21,7 @@ var refreshbtn = $("#refreshbtn")[0]; //You dont have to use [0], however this j
 
 // Register button listeners
 imgSelector.addEventListener("change", function () { // file has been picked
-    pageheader.innerHTML = "Just a sec while we analyse your mood...";
+    pageheader.innerHTML = "Just a sec while we analyse your picture...";
     processImage(function (file) { //this checks the extension and file
         // Get emotions based on image
         sendEmotionRequest(file, function (emotionScores) { //here we send the API request and get the response
@@ -62,7 +62,7 @@ function processImage(callback) : void {
 
 function changeUI() : void {
     //Show detected mood
-    pageheader.innerHTML = "Your mood is: " + currentMood.name;  //Remember currentMood is a Mood object, which has a name and emoji linked to it. 
+    pageheader.innerHTML = "Your estimate age is: " + currentMood.name;  //Remember currentMood is a Mood object, which has a name and emoji linked to it. 
     //Show mood emoji
     var img : HTMLImageElement = <HTMLImageElement>  $("#selected-img")[0];//getting a predefined area on our webpage to show the emoji
     img.src = currentMood.emoji; //link that area to the emoji of our currentMood.

@@ -1,5 +1,5 @@
 html { 
-    background: url("http://theme.dima-lab.com/okab/images/landing-page-iphone/blurred-home-bg.jpg") no-repeat center center fixed; 
+    background: url("http://wedesignthemes.com/themes/dt-multihost/wp-content/uploads/2015/04/blur-bg.jpg") no-repeat center center fixed; 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -9,6 +9,7 @@ html {
 body {
     color: white;
     background-color: transparent;
+    font-family: "Comic Sans MS", cursive, sans-serif;
 }
 
 h1#app-name {
@@ -44,6 +45,19 @@ body #page-container {
 
 input#my-file-selector {
     display:none;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+}
+
+.btn-info {
+  color: #fff;
+  background-color: #006666;
+  border-color: #006666;
+}
+
+.btn-info:hover {
+  color: #fff;
+  background-color: #127875;
+  border-color: #127875;
 }
 
 #musicplayer{
