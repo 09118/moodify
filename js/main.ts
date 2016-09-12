@@ -9,7 +9,8 @@ function initSC() : void {
     });
 }
 
-var currentMood: Mood;
+var currentAge: Age;
+var predictiveAge;
 
 // Get elements from DOM
 var pageheader = $("#page-header")[0]; //note the [0], jQuery returns an object, so to get the html DOM object we need the first item in the object
@@ -24,21 +25,20 @@ imgSelector.addEventListener("change", function () { // file has been picked
     pageheader.innerHTML = "Just a sec while we analyse your picture...";
     processImage(function (file) { //this checks the extension and file
         // Get emotions based on image
-        sendEmotionRequest(file, function (emotionScores) { //here we send the API request and get the response
+        sendEmotionRequest(file, function (faceAttributes) { //here we send the API request and get the response
             // Find out most dominant emotion
-            currentMood = getCurrMood(emotionScores); //this is where we send out scores to find out the predominant emotion
+            currentAge = getCurrAge(faceAttributes); //this is where we send out scores to find out the predominant emotion
             changeUI(); //time to update the web app, with their emotion!
-            loadSong(currentMood);
+            loadSong(currentAge);
             //Done!!
         });
     });
 });
 
 refreshbtn.addEventListener("click", function () {
-    // TODO: Load random song based on mood
-    // Load random song based on mood
-    loadSong(currentMood);
-    alert("You clicked the button"); 
+    // TODO: Load random song based on age
+    // Load random song based on age
+    loadSong(currentAge);
 });
 
 function processImage(callback) : void {
@@ -61,12 +61,12 @@ function processImage(callback) : void {
 }
 
 function changeUI() : void {
-    //Show detected mood
-    pageheader.innerHTML = "Your estimate age is: " + currentMood.name;  //Remember currentMood is a Mood object, which has a name and emoji linked to it. 
-    //Show mood emoji
-    var img : HTMLImageElement = <HTMLImageElement>  $("#selected-img")[0];//getting a predefined area on our webpage to show the emoji
-    img.src = currentMood.emoji; //link that area to the emoji of our currentMood.
-    img.style.display = "block"; //just some formating of the emoji's location
+    //Show detected age range
+    pageheader.innerHTML = "The estimated age range category falls under: " + currentAge.range + "<br/><br/>The predictive age is:" + predictiveAge;  //Remember currentAge is a Age object, which has a age and age range picture linked to it.
+    //Show age range photo
+    var img : HTMLImageElement = <HTMLImageElement>  $("#selected-img")[0];//getting a predefined area on our webpage to show the displayAge range
+    img.src = currentAge.displayAge; //link that area to the displayAge range of our currentAge.
+    img.style.display = "block"; //just some formating of the displayAge's location
 
     //Display song refresh button
     refreshbtn.style.display = "inline";
@@ -78,11 +78,11 @@ function changeUI() : void {
 // and code snippet in emotion API documentation
 function sendEmotionRequest(file, callback) : void {
     $.ajax({
-        url: "https://api.projectoxford.ai/emotion/v1.0/recognize",
+        url: "https://api.projectoxford.ai/face/v1.0/detect?returnFaceAttributes=age",
         beforeSend: function (xhrObj) {
             // Request headers
             xhrObj.setRequestHeader("Content-Type", "application/octet-stream");
-            xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", "d342c8d19d4e4aafbf64ed9f025aecc8");
+            xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", "1b3db931b67143a68c4cdd73137ab9bd");
         },
         type: "POST",
         data: file,
@@ -90,9 +90,9 @@ function sendEmotionRequest(file, callback) : void {
     })
         .done(function (data) {
             if (data.length != 0) { // if a face is detected
-                // Get the emotion scores
-                var scores = data[0].scores;
-                callback(scores);
+                // Get the face attributes i.e. age is selected later on
+                var faceAttributes = data[0].faceAttributes;
+                callback(faceAttributes);
             } else {
                 pageheader.innerHTML = "Hmm, we can't detect a human face in that photo. Try another?";
             }
@@ -103,38 +103,45 @@ function sendEmotionRequest(file, callback) : void {
         });
 }
 
-// Section of code that handles the mood
+// Section of code that handles the age
 
-//A Mood class which has the mood as a string and its corresponding emoji
-class Mood {
-    name: string;
-    emoji: string;
-    constructor(public mood, public emojiurl) {
-        this.name = mood;
-        this.emoji = emojiurl;
+//A Age class which has the age as a string and its corresponding displayAge
+class Age {
+    range: string;
+    displayAge: string;
+    constructor(public age, public displayAgeNumber) {
+        this.range = age;
+        this.displayAge = displayAgeNumber;
     }
 }
 
 
-var happy : Mood = new Mood("happy", "http://emojipedia-us.s3.amazonaws.com/cache/a0/38/a038e6d3f342253c5ea3c057fe37b41f.png");
-var sad : Mood  = new Mood("sad", "https://cdn.shopify.com/s/files/1/1061/1924/files/Sad_Face_Emoji.png?9898922749706957214");
-var angry : Mood = new Mood("angry", "https://cdn.shopify.com/s/files/1/1061/1924/files/Very_Angry_Emoji.png?9898922749706957214");
-var neutral : Mood  = new Mood("neutral", "https://cdn.shopify.com/s/files/1/1061/1924/files/Neutral_Face_Emoji.png?9898922749706957214");
+var teens : Age = new Age("teens", "https://aos.iacpublishinglabs.com/question/aq/1400px-788px/how-can-my-teenager-make-friends_39535e87bf2dbc60.jpg?domain=cx.aos.ask.com");
+var youngAdults : Age  = new Age("youngAdults", "http://dropoflife.com.au/images/dropoflife/young-adults.jpg");
+var adults : Age = new Age("adults", "http://matherconsulting.com/blog/wp-content/uploads/2012/03/young-adults.jpg");
+var matureAdults : Age  = new Age("matureAdults", "http://www.naturalnews.com/gallery/640/Women/Confident-People-Happy-Group.jpg");
+var seniors : Age  = new Age("seniors", "https://www.auroragov.org/UserFiles/Servers/Server_1881137/Image/Residents/Senior%20Resources/019601.jpg");
+var matureSeniors : Age  = new Age("matureSeniors", "http://cel.csusb.edu/images/cel_slideshow_osher.png");
 
 
 // any type as the scores values is from the project oxford api request (so we dont know the type)
-function getCurrMood(scores : any) : Mood {
+function getCurrAge(faceAttributes : any) : Age {
+    predictiveAge = faceAttributes.age; //Assign actual predictive age to the variable
     // In a practical sense, you would find the max emotion out of all the emotions provided. However we'll do the below just for simplicity's sake :P
-    if (scores.happiness > 0.4) {
-        currentMood = happy;
-    } else if (scores.sadness > 0.4) {
-        currentMood = sad;
-    } else if (scores.anger > 0.4) {
-        currentMood = angry;
+    if (faceAttributes.age < 20) {
+        currentAge = teens;
+    } else if (faceAttributes.age < 30) {
+        currentAge = youngAdults;
+    } else if (faceAttributes.age < 40) {
+        currentAge = adults;
+    } else if (faceAttributes.age < 50) {
+        currentAge = matureAdults;
+    } else if (faceAttributes.age < 60) {
+        currentAge = seniors;
     } else {
-        currentMood = neutral;
+        currentAge = matureSeniors;
     }
-    return currentMood;
+    return currentAge;
 }
 
 // Section of code that handles the music and soundcloud
@@ -149,36 +156,55 @@ class Song {
     }
 }
 
-//A Playlist class which holds various amount of songs for each different mood
+//A Playlist class which holds various amount of songs for each different age
 class Playlist {
-    happy: Song[];
-    sad: Song[];
-    angry: Song[];
+    teens: Song[];
+    youngAdults: Song[];
+    adults: Song[];
+    matureAdults: Song[];
+    seniors: Song[];
+    matureSeniors: Song[];
 
     constructor() {
-        this.happy = [];
-        this.sad = [];
-        this.angry = [];
+        this.teens = [];
+        this.youngAdults = [];
+        this.adults = [];
+        this.matureAdults = [];
+        this.seniors = [];
+        this.matureSeniors = [];
+
     }
 
-    addSong(mood : string, song : Song) : void {
-        // depending on the mood we want to add it to its corresponding list in our playlist
-        if (mood === "happy") {
-            this.happy.push(song); // this means the value of happy of the playlist object that got invoked the method "addSong"
-        } else if (mood === "sad") {
-            this.sad.push(song);
-        } else if (mood === "angry") {
-            this.angry.push(song);
+    addSong(age : string, song : Song) : void {
+        // depending on the age we want to add it to its corresponding list in our playlist
+        if (age === "teens") {
+            this.teens.push(song); // this means the value of happy of the playlist object that got invoked the method "addSong"
+        } else if (age === "youngAdults") {
+            this.youngAdults.push(song);
+        } else if (age === "adults") {
+            this.adults.push(song);
+        } else if (age === "matureAdults") {
+            this.matureAdults.push(song);
+        } else if (age === "seniors") {
+            this.seniors.push(song);
+        } else if (age === "matureSeniors") {
+            this.matureSeniors.push(song);
         } // do a default one as well
     }
 
-    getRandSong(mood : string) : Song {
-        if (mood === "happy" || mood === "neutral") { // we have happy and neutral as getting songs from happy
-            return this.happy[Math.floor(Math.random() * this.happy.length)];
-        } else if (mood === "sad") {
-            return this.sad[Math.floor(Math.random() * this.sad.length)];
-        } else if (mood === "angry") {
-            return this.angry[Math.floor(Math.random() * this.angry.length)];
+    getRandSong(age : string) : Song {
+        if (age === "teens") {
+            return this.teens[Math.floor(Math.random() * this.teens.length)];
+        } else if (age === "youngAdults") {
+            return this.youngAdults[Math.floor(Math.random() * this.youngAdults.length)];
+        } else if (age === "adults") {
+            return this.adults[Math.floor(Math.random() * this.adults.length)];
+        } else if (age === "matureAdults") {
+            return this.matureAdults[Math.floor(Math.random() * this.matureAdults.length)];
+        } else if (age === "seniors") {
+            return this.seniors[Math.floor(Math.random() * this.seniors.length)];
+        } else if (age === "matureSeniors") {
+            return this.matureSeniors[Math.floor(Math.random() * this.matureSeniors.length)];
         } 
     }
 }
@@ -189,16 +215,24 @@ function init() : void {
     // init playlist
     myPlaylist = new Playlist();
 
-    myPlaylist.addSong("happy", new Song("Animals", "https://soundcloud.com/martingarrix/martin-garrix-animals-original")); // Song name and the url of the song on SoundCloud
-    myPlaylist.addSong("happy", new Song("Good feeling", "https://soundcloud.com/anderia/flo-rida-good-feeling"));
-    myPlaylist.addSong("happy", new Song("Megalovania", "https://soundcloud.com/angrysausage/toby-fox-undertale"));
-    myPlaylist.addSong("happy", new Song("On top of the world", "https://soundcloud.com/interscope/imagine-dragons-on-top-of-the"));
-    myPlaylist.addSong("sad", new Song("How to save a life", "https://soundcloud.com/jelenab-1/the-fray-how-to-save-a-life-7"));
-    myPlaylist.addSong("sad", new Song("Divenire", "https://soundcloud.com/djsmil/ludovico-einaudi-divenire"));
-    myPlaylist.addSong("sad", new Song("Stay High", "https://soundcloud.com/musaradian/our-last-night-habitsstay-hightove-lo"));
-    myPlaylist.addSong("angry", new Song("When they come for me", "https://soundcloud.com/heoborus/when-they-come-for-me-linkin-park"));
-    myPlaylist.addSong("angry", new Song("One Step Closer", "https://soundcloud.com/user1512165/linkin-park-one-step-closer"));
-    myPlaylist.addSong("angry", new Song("Somewhere I belong", "https://soundcloud.com/mandylinkinparkmusic2xd/somewhere-i-belong"));
+    myPlaylist.addSong("teens", new Song("Wings", "https://soundcloud.com/little-mix/03-track-03")); // Song name and the url of the song on SoundCloud
+    myPlaylist.addSong("teens", new Song("Ain't It Fun", "https://soundcloud.com/haidar-alhamid-1/paramore-aint-it-fun-official"));
+    myPlaylist.addSong("teens", new Song("Behind Bars", "https://soundcloud.com/thewanted/the-wanted-behind-bars-1-min"));
+    myPlaylist.addSong("youngAdults", new Song("Day and Night", "https://soundcloud.com/loricyk/kid-cudi-day-and-night-2"));
+    myPlaylist.addSong("youngAdults", new Song("Flatline", "https://soundcloud.com/bobatl/bob-flatline-feat-neil-tyson"));
+    myPlaylist.addSong("youngAdults", new Song("Nikes On My Feet", "https://soundcloud.com/sick_cherry_ru/mac-miller-nikes-on-my-feet"));
+    myPlaylist.addSong("adults", new Song("Glory", "https://soundcloud.com/johnlegend/glory-ft-common"));
+    myPlaylist.addSong("adults", new Song("Mechanical Bull", "https://soundcloud.com/kingsofleon/sets/mechanical-bull-deluxe-version"));
+    myPlaylist.addSong("adults", new Song("About the Money", "https://soundcloud.com/tiofficial/ti-about-the-money-ft-young-thug"));
+    myPlaylist.addSong("matureAdults", new Song("I'm Not the Marrying Kind", "https://soundcloud.com/elvissonymusic/im-not-the-marrying-kind"));
+    myPlaylist.addSong("matureAdults", new Song("4 Minutes", "https://soundcloud.com/loveblonde2014/madonna-4-minutes-2015-loose-ur-breath-mix"));
+    myPlaylist.addSong("matureAdults", new Song("Sunday Bloody Sunday", "https://soundcloud.com/you-two/u2-sunday-bloody-sunday"));
+    myPlaylist.addSong("seniors", new Song("Captain Fantastic And The Brown Dirt Cowboy", "https://soundcloud.com/elton-john/elton-john-captain-fantastic-1"));
+    myPlaylist.addSong("seniors", new Song("Take It Easy", "https://soundcloud.com/silverdogmusic/take-it-easy-the-eagles-1"));
+    myPlaylist.addSong("seniors", new Song("Shackled And Drawn", "https://soundcloud.com/brucespringsteen/shackled-and-drawn"));
+    myPlaylist.addSong("matureSeniors", new Song("Sway", "https://soundcloud.com/salma-spy/sway-dean-martin"));
+    myPlaylist.addSong("matureSeniors", new Song("Ghost Riders in the Sky", "https://soundcloud.com/invizibleman/willie-nelson-johnny-cash-ghost-riders-in-the-sky"));
+    myPlaylist.addSong("matureSeniors", new Song("Dancing Queen", "https://soundcloud.com/cainan-esdras-1/abba-dancing-queen-live"));
 
     // init soundcloud
     initSC();
@@ -214,8 +248,8 @@ function loadPlayer(trackurl : string) : void {
 // Initialise playlist and soundcloud
 init();
 
-function loadSong(currentMood : Mood) : void {
-    var songSelected : Song = myPlaylist.getRandSong(currentMood.name); // gets a random song based on the moodd
+function loadSong(currentAge : Age) : void {
+    var songSelected : Song = myPlaylist.getRandSong(currentAge.range); // gets a random song based on the age
     var track_url : string = songSelected.url; 
 
     $("#track-name")[0].innerHTML = "Have a listen to: " + songSelected.title; // display the song being played
