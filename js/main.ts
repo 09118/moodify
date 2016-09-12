@@ -62,7 +62,7 @@ function processImage(callback) : void {
 
 function changeUI() : void {
     //Show detected age range
-    pageheader.innerHTML = "The estimated age range category falls under: " + currentAge.range + "<br/><br/>The predictive age is:" + predictiveAge;  //Remember currentAge is a Age object, which has a age and age range picture linked to it.
+    pageheader.innerHTML = "The estimated age range category falls under: " + currentAge.range + "<br/><br/>The predictive age is: " + predictiveAge;  //Remember currentAge is a Age object, which has a age and age range picture linked to it.
     //Show age range photo
     var img : HTMLImageElement = <HTMLImageElement>  $("#selected-img")[0];//getting a predefined area on our webpage to show the displayAge range
     img.src = currentAge.displayAge; //link that area to the displayAge range of our currentAge.
